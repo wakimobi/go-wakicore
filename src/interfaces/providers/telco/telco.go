@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/wakimobi/go-telesat-h3i_kb/src/interfaces/providers"
+	"github.com/wakimobi/go-wakicore/src/interfaces/providers"
 )
 
 type TelcoCfg struct {

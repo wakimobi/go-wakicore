@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/wakimobi/go-telesat-h3i_kb/src/common"
+	"github.com/wakimobi/go-wakicore/src/common"
 	"github.com/wakimobi/go-wakicore/src/domain/subscriptions"
 	"github.com/wakimobi/go-wakicore/src/services"
 	"github.com/wakimobi/go-wakicore/src/utils/errors"

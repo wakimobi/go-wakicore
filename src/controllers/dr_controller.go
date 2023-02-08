@@ -3,8 +3,8 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"github.com/wakimobi/go-telesat-h3i_kb/src/common"
-	"github.com/wakimobi/go-telesat-h3i_kb/src/utils/errors"
+	"github.com/wakimobi/go-wakicore/src/common"
+	"github.com/wakimobi/go-wakicore/src/utils/errors"
 	"github.com/wakimobi/go-wakicore/src/utils/logger_utils"
 )
 

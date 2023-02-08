@@ -4,7 +4,7 @@ services:
   rabbit1:
     image: lucifer8591/rabbitmq-server:3.7.17
     container_name: rabbitwakicore
-    hostname: rabbit1
+    hostname: rabbitmq
     ports:
       - "5675:5672"
       - "15675:15672"
