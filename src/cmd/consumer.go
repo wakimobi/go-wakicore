@@ -1,28 +1,52 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 
+	"github.com/idprm/go-pass-tsel/src/config"
+	"github.com/idprm/go-pass-tsel/src/datasource/pgsql/db"
+	"github.com/idprm/go-pass-tsel/src/datasource/rabbitmq"
+	"github.com/idprm/go-pass-tsel/src/domain/entity"
+	"github.com/idprm/go-pass-tsel/src/logger"
 	"github.com/spf13/cobra"
-	"github.com/wakimobi/go-wakicore/src/datasource/rabbitmq/queue"
 )
 
 var consumerMOCmd = &cobra.Command{
-	Use:   "consumer-mo",
+	Use:   "consumer_mo",
 	Short: "Consumer MO Service CLI",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
+		/**
+		 * LOAD CONFIG
+		 */
+		cfg, err := config.LoadSecret("secret.yaml")
+		if err != nil {
+			panic(err)
+		}
+
+		/**
+		 * SETUP PGSQL
+		 */
+		db := db.InitDB(cfg)
+
+		/**
+		 * SETUP LOG
+		 */
+		logger := logger.NewLogger(cfg)
+
+		/**
+		 * SETUP RMQ
+		 */
+		queue := rabbitmq.InitQueue(cfg)
 
 		/**
 		 * SETUP CHANNEL
 		 */
-		queue.Rabbit.SetUpChannel(RMQ_EXCHANGETYPE, true, RMQ_MOEXCHANGE, true, RMQ_MOQUEUE)
+		queue.SetUpChannel(RMQ_EXCHANGETYPE, true, RMQ_MOEXCHANGE, true, RMQ_MOQUEUE)
 
-		/**
-		 * QUEUE HANDLER
-		 */
-		messagesData := queue.Rabbit.Subscribe(1, false, RMQ_MOQUEUE, RMQ_MOEXCHANGE, RMQ_MOQUEUE)
+		messagesData := queue.Subscribe(1, false, RMQ_MOQUEUE, RMQ_MOEXCHANGE, RMQ_MOQUEUE)
 
 		// Initial sync waiting group
 		var wg sync.WaitGroup
@@ -35,9 +59,11 @@ var consumerMOCmd = &cobra.Command{
 
 			// Loop every incoming data
 			for d := range messagesData {
+				var req entity.ReqMOParams
+				json.Unmarshal(d.Body, &req)
 
 				wg.Add(1)
-				moProcessor(&wg, d.Body)
+				moProcessor(cfg, db, logger, &wg, d.Body)
 				wg.Wait()
 
 				// Manual consume queue
@@ -54,19 +80,39 @@ var consumerMOCmd = &cobra.Command{
 }
 
 var consumerDRCmd = &cobra.Command{
-	Use:   "consumer-dr",
+	Use:   "consumer_dr",
 	Short: "Consumer DR Service CLI",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		/**
-		 * Setup Channel
+		 * LOAD CONFIG
 		 */
-		queue.Rabbit.SetUpChannel(RMQ_EXCHANGETYPE, true, RMQ_DREXCHANGE, true, RMQ_DRQUEUE)
+		cfg, err := config.LoadSecret("secret.yaml")
+		if err != nil {
+			panic(err)
+		}
 
 		/**
-		 * Queue Hanlder
+		 * SETUP PGSQL
 		 */
-		messagesData := queue.Rabbit.Subscribe(1, false, RMQ_DRQUEUE, RMQ_DREXCHANGE, RMQ_DRQUEUE)
+		db := db.InitDB(cfg)
+
+		/**
+		 * SETUP LOG
+		 */
+		logger := logger.NewLogger(cfg)
+
+		/**
+		 * SETUP RMQ
+		 */
+		queue := rabbitmq.InitQueue(cfg)
+
+		/**
+		 * SETUP CHANNEL
+		 */
+		queue.SetUpChannel(RMQ_EXCHANGETYPE, true, RMQ_DREXCHANGE, true, RMQ_DRQUEUE)
+
+		messagesData := queue.Subscribe(1, false, RMQ_DRQUEUE, RMQ_DREXCHANGE, RMQ_DRQUEUE)
 
 		// Initial sync waiting group
 		var wg sync.WaitGroup
@@ -81,7 +127,7 @@ var consumerDRCmd = &cobra.Command{
 			for d := range messagesData {
 
 				wg.Add(1)
-				drProcessor(&wg, d.Body)
+				drProcessor(cfg, db, logger, &wg, d.Body)
 				wg.Wait()
 
 				// Manual consume queue
@@ -98,19 +144,39 @@ var consumerDRCmd = &cobra.Command{
 }
 
 var consumerRenewalCmd = &cobra.Command{
-	Use:   "consumer-renewal",
+	Use:   "consumer_renewal",
 	Short: "Consumer Renewal Service CLI",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		/**
-		 * Setup Channel
+		 * LOAD CONFIG
 		 */
-		queue.Rabbit.SetUpChannel(RMQ_EXCHANGETYPE, true, RMQ_RENEWALEXCHANGE, true, RMQ_RENEWALQUEUE)
+		cfg, err := config.LoadSecret("secret.yaml")
+		if err != nil {
+			panic(err)
+		}
 
 		/**
-		 * Queue Handler
+		 * SETUP PGSQL
 		 */
-		messagesData := queue.Rabbit.Subscribe(1, false, RMQ_RENEWALQUEUE, RMQ_RENEWALEXCHANGE, RMQ_RENEWALQUEUE)
+		db := db.InitDB(cfg)
+
+		/**
+		 * SETUP LOG
+		 */
+		logger := logger.NewLogger(cfg)
+
+		/**
+		 * SETUP RMQ
+		 */
+		queue := rabbitmq.InitQueue(cfg)
+
+		/**
+		 * SETUP CHANNEL
+		 */
+		queue.SetUpChannel(RMQ_EXCHANGETYPE, true, RMQ_RENEWALEXCHANGE, true, RMQ_RENEWALQUEUE)
+
+		messagesData := queue.Subscribe(1, false, RMQ_RENEWALQUEUE, RMQ_RENEWALEXCHANGE, RMQ_RENEWALQUEUE)
 
 		// Initial sync waiting group
 		var wg sync.WaitGroup
@@ -125,7 +191,7 @@ var consumerRenewalCmd = &cobra.Command{
 			for d := range messagesData {
 
 				wg.Add(1)
-				renewalProcessor(&wg, d.Body)
+				renewalProcessor(cfg, db, logger, &wg, d.Body)
 				wg.Wait()
 
 				// Manual consume queue
@@ -142,19 +208,39 @@ var consumerRenewalCmd = &cobra.Command{
 }
 
 var consumerRetryCmd = &cobra.Command{
-	Use:   "consumer-retry",
+	Use:   "consumer_retry",
 	Short: "Consumer Retry Service CLI",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		/**
-		 * Setup Channel
+		 * LOAD CONFIG
 		 */
-		queue.Rabbit.SetUpChannel(RMQ_EXCHANGETYPE, true, RMQ_RETRYEXCHANGE, true, RMQ_RETRYQUEUE)
+		cfg, err := config.LoadSecret("secret.yaml")
+		if err != nil {
+			panic(err)
+		}
 
 		/**
-		 * Queue Handler
+		 * SETUP PGSQL
 		 */
-		messagesData := queue.Rabbit.Subscribe(1, false, RMQ_RETRYQUEUE, RMQ_RETRYEXCHANGE, RMQ_RETRYQUEUE)
+		db := db.InitDB(cfg)
+
+		/**
+		 * SETUP LOG
+		 */
+		logger := logger.NewLogger(cfg)
+
+		/**
+		 * SETUP RMQ
+		 */
+		queue := rabbitmq.InitQueue(cfg)
+
+		/**
+		 * SETUP CHANNEL
+		 */
+		queue.SetUpChannel(RMQ_EXCHANGETYPE, true, RMQ_RETRYEXCHANGE, true, RMQ_RETRYQUEUE)
+
+		messagesData := queue.Subscribe(1, false, RMQ_RETRYQUEUE, RMQ_RETRYEXCHANGE, RMQ_RETRYQUEUE)
 
 		// Initial sync waiting group
 		var wg sync.WaitGroup
@@ -169,7 +255,7 @@ var consumerRetryCmd = &cobra.Command{
 			for d := range messagesData {
 
 				wg.Add(1)
-				retryProcessor(&wg, d.Body)
+				retryProcessor(cfg, db, logger, &wg, d.Body)
 				wg.Wait()
 
 				// Manual consume queue

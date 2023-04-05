@@ -1,9 +1,9 @@
-version: "3.7"
+version: '3.7'
 
 services:
   rabbit1:
     image: lucifer8591/rabbitmq-server:3.7.17
-    container_name: rabbitwakicore
+    container_name: rabbitPassTsel
     hostname: rabbitmq
     ports:
       - "5675:5672"
@@ -11,3 +11,7 @@ services:
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-admin}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-admin}
+    volumes:
+      - ~/.docker-conf/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq

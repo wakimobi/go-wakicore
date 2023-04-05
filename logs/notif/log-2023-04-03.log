@@ -1,0 +1,2 @@
+{"level":"info","msg":"UNSUBSCRIPTION","msisdn":"6282322597751","request":"https://cms-tsel.goaly.mobi/Subscription/unsub_notify?event=unreg\u0026msisdn=6282322597751","time":"2023-04-03T14:44:51+07:00"}
+{"level":"info","msg":"UNSUBSCRIPTION","msisdn":"6282322597751","response":"\n\n{\"msg\":\"successfully unsubscribed\",\"msisdn\":\"6282322597751\",\"status_member\":\"not subscribed\"}","time":"2023-04-03T14:44:52+07:00"}

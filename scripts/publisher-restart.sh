@@ -1,0 +1,2 @@
+sudo service pass_tsel_publisher_renewal restart
+sudo service pass_tsel_publisher_retry restart

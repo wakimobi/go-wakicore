@@ -1,28 +1,22 @@
 package services
 
-import (
-	"github.com/wakimobi/go-wakicore/src/domain/blacklists"
-	"github.com/wakimobi/go-wakicore/src/utils/errors"
-)
+import "github.com/idprm/go-pass-tsel/src/domain/repository"
 
-func CountBlacklist(msisdn string) (int, *errors.RestErr) {
-	result := blacklists.Blacklist{
-		Msisdn: msisdn,
-	}
-	count, err := result.Count()
-	if err != nil {
-		return 0, err
-	}
-
-	return count, nil
+type BlacklistService struct {
+	blacklistRepo repository.IBlacklistRepository
 }
 
-func GetBlacklist(msisdn string) (*blacklists.Blacklist, *errors.RestErr) {
-	result := blacklists.Blacklist{
-		Msisdn: msisdn,
+type IBlacklistService interface {
+	GetBlacklist(msisdn string) bool
+}
+
+func NewBlacklistService(blacklistRepo repository.IBlacklistRepository) *BlacklistService {
+	return &BlacklistService{
+		blacklistRepo: blacklistRepo,
 	}
-	if err := result.Get(); err != nil {
-		return nil, err
-	}
-	return &result, nil
+}
+
+func (s *BlacklistService) GetBlacklist(msisdn string) bool {
+	count, _ := s.blacklistRepo.Count(msisdn)
+	return count > 0
 }

@@ -1,50 +1,48 @@
 package services
 
 import (
-	"github.com/wakimobi/go-wakicore/src/domain/transactions"
-	"github.com/wakimobi/go-wakicore/src/utils/errors"
+	"github.com/idprm/go-pass-tsel/src/domain/entity"
+	"github.com/idprm/go-pass-tsel/src/domain/repository"
 )
 
-func CreateTransaction(tr transactions.Transaction) (*transactions.Transaction, *errors.RestErr) {
-
-	if err := tr.Save(); err != nil {
-		return nil, err
-	}
-	return &tr, nil
+type TransactionService struct {
+	transactionRepo repository.ITransactionRepository
 }
 
-func GetTransaction(productId int, msisdn string) (*transactions.Transaction, *errors.RestErr) {
-	result := transactions.Transaction{ProductID: productId, Msisdn: msisdn}
-	if err := result.Get(); err != nil {
-		return nil, err
-	}
-
-	return &result, nil
+type ITransactionService interface {
+	SaveTransaction(*entity.Transaction) error
+	UpdateTransaction(*entity.Transaction) error
 }
 
-func UpdateTransaction(isPartial bool, tr transactions.Transaction) (*transactions.Transaction, *errors.RestErr) {
-	current, err := GetTransaction(tr.ProductID, tr.Msisdn)
+func NewTransactionService(transactionRepo repository.ITransactionRepository) *TransactionService {
+	return &TransactionService{
+		transactionRepo: transactionRepo,
+	}
+}
+
+func (s *TransactionService) SaveTransaction(t *entity.Transaction) error {
+	err := s.transactionRepo.Save(t)
 	if err != nil {
-		return nil, err
+		return err
+	}
+	return nil
+}
+
+func (s *TransactionService) UpdateTransaction(t *entity.Transaction) error {
+	data := &entity.Transaction{
+		ServiceID: t.ServiceID,
+		Msisdn:    t.Msisdn,
+		Subject:   t.Subject,
+		Status:    "FAILED",
+	}
+	errDelete := s.transactionRepo.Delete(data)
+	if errDelete != nil {
+		return errDelete
 	}
 
-	if isPartial {
-		if tr.Status != "" {
-			current.Status = tr.Status
-		}
-
-		if tr.Subject != "" {
-			current.Subject = tr.Subject
-		}
-
-	} else {
-		current.Status = tr.Status
-		current.Subject = tr.Subject
+	errSave := s.transactionRepo.Save(t)
+	if errSave != nil {
+		return errSave
 	}
-
-	if err := current.Update(); err != nil {
-		return nil, err
-	}
-
-	return current, nil
+	return nil
 }

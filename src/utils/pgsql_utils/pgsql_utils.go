@@ -4,8 +4,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/idprm/go-pass-tsel/src/utils/errors"
 	pq "github.com/lib/pq"
-	"github.com/wakimobi/go-wakicore/src/utils/errors"
 )
 
 const (
@@ -23,17 +23,6 @@ func ParseError(err error) *errors.RestErr {
 		}
 		return errors.NewInternalServerError("Error parsing database response")
 	}
-
-	switch sqlErr.Code.Name() {
-	case "02001":
-		return errors.NewBadRequestError("Invalid data")
-	}
-
-	return errors.NewInternalServerError("Error processing request")
-}
-
-func ParseErrorSkip(err error) *errors.RestErr {
-	sqlErr, _ := err.(*pq.Error)
 
 	switch sqlErr.Code.Name() {
 	case "02001":

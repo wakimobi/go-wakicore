@@ -1,17 +1,42 @@
 package services
 
 import (
-	"github.com/wakimobi/go-wakicore/src/domain/contents"
-	"github.com/wakimobi/go-wakicore/src/utils/errors"
+	"github.com/idprm/go-pass-tsel/src/domain/entity"
+	"github.com/idprm/go-pass-tsel/src/domain/repository"
 )
 
-func GetContent(productId int, name string) (*contents.Content, *errors.RestErr) {
-	result := contents.Content{
-		ProductID: productId,
-		Name:      name,
+type ContentService struct {
+	contentRepo repository.IContentRepository
+}
+
+type IContentService interface {
+	GetContent(int, string, int) (*entity.Content, error)
+}
+
+func NewContentService(contentRepo repository.IContentRepository) *ContentService {
+	return &ContentService{
+		contentRepo: contentRepo,
 	}
-	if err := result.Get(); err != nil {
+}
+
+func (s *ContentService) GetContent(serviceId int, name string, pin int) (*entity.Content, error) {
+	result, err := s.contentRepo.Get(serviceId, name)
+	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+
+	var content entity.Content
+
+	if result != nil {
+		content = entity.Content{
+			Value: result.Value,
+			Tid:   result.Tid,
+		}
+
+		// set pin
+		if pin > 0 {
+			content.SetPIN(pin)
+		}
+	}
+	return &content, nil
 }

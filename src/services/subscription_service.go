@@ -1,151 +1,129 @@
 package services
 
 import (
-	"github.com/wakimobi/go-wakicore/src/domain/subscriptions"
-	"github.com/wakimobi/go-wakicore/src/utils/errors"
+	"log"
+
+	"github.com/idprm/go-pass-tsel/src/domain/entity"
+	"github.com/idprm/go-pass-tsel/src/domain/repository"
 )
 
-func CreateSubscription(sub subscriptions.Subscription) (*subscriptions.Subscription, *errors.RestErr) {
-	if err := sub.Validate(); err != nil {
-		return nil, err
-	}
-	if err := sub.Save(); err != nil {
-		return nil, err
-	}
-	return &sub, nil
+type SubscriptionService struct {
+	subscriptionRepo repository.ISubscriptionRepository
 }
 
-func GetSubscription(productId int, msisdn string) (*subscriptions.Subscription, *errors.RestErr) {
-	result := subscriptions.Subscription{
-		ProductID: productId,
-		Msisdn:    msisdn,
-	}
-	if err := result.Get(); err != nil {
-		return nil, err
-	}
-	return &result, nil
+type ISubscriptionService interface {
+	GetActiveSubscription(int, string) bool
+	GetSubscription(int, string) bool
+	SaveSubscription(*entity.Subscription) error
+	UpdateSuccess(*entity.Subscription) error
+	UpdateFailed(*entity.Subscription) error
+	UpdateLatest(*entity.Subscription) error
+	UpdateEnable(*entity.Subscription) error
+	UpdateDisable(*entity.Subscription) error
+	ReminderSubscription() *[]entity.Subscription
+	RenewalSubscription() *[]entity.Subscription
+	RetrySubscription() *[]entity.Subscription
+	AveragePerUser() *[]entity.AveragePerUser
 }
 
-func CountSubscription(productId int, msisdn string) (int, *errors.RestErr) {
-	result := subscriptions.Subscription{
-		ProductID: productId,
-		Msisdn:    msisdn,
+func NewSubscriptionService(subscriptionRepo repository.ISubscriptionRepository) *SubscriptionService {
+	return &SubscriptionService{
+		subscriptionRepo: subscriptionRepo,
 	}
-	count, err := result.Count()
+}
+
+func (s *SubscriptionService) GetActiveSubscription(serviceId int, msisdn string) bool {
+	count, err := s.subscriptionRepo.CountActive(serviceId, msisdn)
 	if err != nil {
-		return 0, err
+		log.Println(err)
 	}
-
-	return count, nil
+	return count > 0
 }
 
-func UpdateSubscription(isPartial bool, sub subscriptions.Subscription) (*subscriptions.Subscription, *errors.RestErr) {
-	current, err := GetSubscription(sub.ProductID, sub.Msisdn)
+func (s *SubscriptionService) GetSubscription(serviceId int, msisdn string) bool {
+	count, err := s.subscriptionRepo.Count(serviceId, msisdn)
 	if err != nil {
-		return nil, err
+		log.Println(err)
 	}
-
-	if isPartial {
-
-		if sub.Adnet != "" {
-			current.Adnet = sub.Adnet
-		}
-
-		if sub.LatestSubject != "" {
-			current.LatestSubject = sub.LatestSubject
-		}
-
-		if sub.LatestStatus != "" {
-			current.LatestStatus = sub.LatestStatus
-		}
-
-		if !sub.RenewalAt.IsZero() {
-			current.RenewalAt = sub.RenewalAt
-		}
-
-		if !sub.PurgeAt.IsZero() {
-			current.PurgeAt = sub.PurgeAt
-		}
-
-		if !sub.UnsubAt.IsZero() {
-			current.UnsubAt = sub.UnsubAt
-		}
-
-		if !sub.ChargeAt.IsZero() {
-			current.ChargeAt = sub.ChargeAt
-		}
-
-		if !sub.RetryAt.IsZero() {
-			current.RetryAt = sub.RetryAt
-		}
-
-		if sub.SuccessFirstpush != 0 {
-			current.SuccessFirstpush = sub.SuccessFirstpush
-		}
-
-		if sub.SuccessRenewal != 0 {
-			current.SuccessRenewal = sub.SuccessRenewal
-		}
-
-		if sub.TotalSuccess != 0 {
-			current.TotalSuccess = sub.TotalSuccess
-		}
-
-		if sub.TotalFirstpush != 0 {
-			current.TotalFirstpush = sub.TotalFirstpush
-		}
-
-		if sub.TotalRenewal != 0 {
-			current.TotalRenewal = sub.TotalRenewal
-		}
-
-		if sub.TotalAmount != 0 {
-			current.TotalAmount = sub.TotalAmount
-		}
-
-		if sub.IsRetry || !sub.IsRetry {
-			current.IsRetry = sub.IsRetry
-		}
-
-		if sub.IsTrial || !sub.IsTrial {
-			current.IsTrial = sub.IsTrial
-		}
-
-		if sub.IsPurge || !sub.IsPurge {
-			current.IsPurge = sub.IsPurge
-		}
-
-		if sub.IsSuspend {
-			current.IsSuspend = sub.IsSuspend
-		}
-
-		if sub.IsActive || !sub.IsActive {
-			current.IsActive = sub.IsActive
-		}
-
-	} else {
-		current.RenewalAt = sub.RenewalAt
-		current.LatestSubject = sub.LatestSubject
-		current.LatestStatus = sub.LatestStatus
-		current.IsActive = sub.IsActive
-	}
-
-	return current, nil
+	return count > 0
 }
 
-func SearchSubscription(status string) ([]subscriptions.Subscription, *errors.RestErr) {
-	dao := &subscriptions.Subscription{}
-	return dao.FindByStatus(status)
-}
-
-func ChargeSubscription(productId int, msisdn string) *errors.RestErr {
-	result := subscriptions.Subscription{
-		ProductID: productId,
-		Msisdn:    msisdn,
-	}
-	if err := result.Get(); err != nil {
+func (s *SubscriptionService) SaveSubscription(sub *entity.Subscription) error {
+	err := s.subscriptionRepo.Save(sub)
+	if err != nil {
 		return err
 	}
-
 	return nil
+}
+
+func (s *SubscriptionService) UpdateSuccess(sub *entity.Subscription) error {
+	err := s.subscriptionRepo.UpdateSuccess(sub)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *SubscriptionService) UpdateFailed(sub *entity.Subscription) error {
+	err := s.subscriptionRepo.UpdateFailed(sub)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *SubscriptionService) UpdateLatest(sub *entity.Subscription) error {
+	err := s.subscriptionRepo.UpdateLatest(sub)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *SubscriptionService) UpdateEnable(sub *entity.Subscription) error {
+	err := s.subscriptionRepo.UpdateEnable(sub)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *SubscriptionService) UpdateDisable(sub *entity.Subscription) error {
+	err := s.subscriptionRepo.UpdateDisable(sub)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *SubscriptionService) ReminderSubscription() *[]entity.Subscription {
+	subs, err := s.subscriptionRepo.Reminder()
+	if err != nil {
+		log.Println(err)
+	}
+	return subs
+}
+
+func (s *SubscriptionService) RenewalSubscription() *[]entity.Subscription {
+	subs, err := s.subscriptionRepo.Renewal()
+	if err != nil {
+		log.Println(err)
+	}
+	return subs
+}
+
+func (s *SubscriptionService) RetrySubscription() *[]entity.Subscription {
+	subs, err := s.subscriptionRepo.Retry()
+	if err != nil {
+		log.Println(err)
+	}
+	return subs
+}
+
+func (s *SubscriptionService) AveragePerUser() *[]entity.AveragePerUser {
+	subs, err := s.subscriptionRepo.AveragePerUser("20", "20", "20")
+	if err != nil {
+		log.Println(err)
+	}
+	return subs
 }

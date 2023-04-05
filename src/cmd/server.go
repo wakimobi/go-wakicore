@@ -1,11 +1,14 @@
 package cmd
 
 import (
-	"os"
+	"log"
 
+	"github.com/idprm/go-pass-tsel/src/app"
+	"github.com/idprm/go-pass-tsel/src/config"
+	"github.com/idprm/go-pass-tsel/src/datasource/pgsql/db"
+	"github.com/idprm/go-pass-tsel/src/datasource/rabbitmq"
+	"github.com/idprm/go-pass-tsel/src/logger"
 	"github.com/spf13/cobra"
-	"github.com/wakimobi/go-wakicore/src/app"
-	"github.com/wakimobi/go-wakicore/src/datasource/rabbitmq/queue"
 )
 
 var serverCmd = &cobra.Command{
@@ -13,16 +16,36 @@ var serverCmd = &cobra.Command{
 	Short: "Webserver CLI",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
+		/**
+		 * LOAD CONFIG
+		 */
+		cfg, err := config.LoadSecret("secret.yaml")
+		if err != nil {
+			panic(err)
+		}
+
+		/**
+		 * SETUP PGSQL
+		 */
+		db := db.InitDB(cfg)
+
+		/**
+		 * SETUP LOG
+		 */
+		logger := logger.NewLogger(cfg)
+
+		/**
+		 * SETUP RMQ
+		 */
+		queue := rabbitmq.InitQueue(cfg)
 
 		/**
 		 * SETUP CHANNEL
 		 */
-		queue.Rabbit.SetUpChannel(RMQ_EXCHANGETYPE, true, RMQ_MOEXCHANGE, true, RMQ_MOQUEUE)
+		queue.SetUpChannel(RMQ_EXCHANGETYPE, true, RMQ_MOEXCHANGE, true, RMQ_MOQUEUE)
+		queue.SetUpChannel(RMQ_EXCHANGETYPE, true, RMQ_DREXCHANGE, true, RMQ_DRQUEUE)
 
-		port := os.Getenv("H3I_KB_PORT")
-
-		app := app.StartApplication()
-		app.Run(":" + port)
-
+		router := app.StartApplication(cfg, db, logger, queue)
+		log.Fatal(router.Listen(":" + cfg.App.Port))
 	},
 }

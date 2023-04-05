@@ -1,8 +1,6 @@
 package errors
 
-import (
-	"net/http"
-)
+import "net/http"
 
 type RestErr struct {
 	Message string `json:"message"`
@@ -31,13 +29,5 @@ func NewInternalServerError(message string) *RestErr {
 		Message: message,
 		Status:  http.StatusInternalServerError,
 		Error:   "internal_server_error",
-	}
-}
-
-func NewForbiddenError(message string) *RestErr {
-	return &RestErr{
-		Message: message,
-		Status:  http.StatusForbidden,
-		Error:   "forbidden",
 	}
 }

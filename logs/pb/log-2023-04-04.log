@@ -1,0 +1,6 @@
+{"level":"info","msg":"POSTBACK","msisdn":"6282322597755","request":"http://kbtools.net/pass-tsel.php?msisdn=6282322597755\u0026partner=passtisel\u0026px=\u0026serv_id=GOALY\u0026trxid=","time":"2023-04-04T15:23:27+07:00"}
+{"level":"info","msg":"POSTBACK","msisdn":"6282322597755","response":"File not found.\n","time":"2023-04-04T15:23:28+07:00"}
+{"level":"info","msg":"POSTBACK","msisdn":"6282322597757","request":"http://kbtools.net/pass-tsel.php?msisdn=6282322597757\u0026partner=passtisel\u0026px=\u0026serv_id=GOALY\u0026trxid=","time":"2023-04-04T15:25:28+07:00"}
+{"level":"info","msg":"POSTBACK","msisdn":"6282322597757","response":"File not found.\n","time":"2023-04-04T15:25:28+07:00"}
+{"level":"info","msg":"POSTBACK","msisdn":"6282322597752","request":"http://kbtools.net/pass-tsel.php?msisdn=6282322597752\u0026partner=passtisel\u0026px=\u0026serv_id=GOALY\u0026trxid=","time":"2023-04-04T15:26:45+07:00"}
+{"level":"info","msg":"POSTBACK","msisdn":"6282322597752","response":"File not found.\n","time":"2023-04-04T15:26:45+07:00"}

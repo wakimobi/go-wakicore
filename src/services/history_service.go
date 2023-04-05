@@ -1,27 +1,28 @@
 package services
 
 import (
-	"github.com/wakimobi/go-wakicore/src/domain/histories"
-	"github.com/wakimobi/go-wakicore/src/utils/errors"
+	"github.com/idprm/go-pass-tsel/src/domain/entity"
+	"github.com/idprm/go-pass-tsel/src/domain/repository"
 )
 
-func CreateHistory(his histories.History) (*histories.History, *errors.RestErr) {
-	if err := his.Validate(); err != nil {
-		return nil, err
-	}
-	if err := his.Save(); err != nil {
-		return nil, err
-	}
-	return &his, nil
+type HistoryService struct {
+	transactionRepo repository.IHistoryRepository
 }
 
-func GetHistory(productId int, msisdn string) (*histories.History, *errors.RestErr) {
-	result := histories.History{
-		ProductID: productId,
-		Msisdn:    msisdn,
+type IHistoryService interface {
+	SaveHistory(*entity.History) error
+}
+
+func NewHistoryService(transactionRepo repository.IHistoryRepository) *HistoryService {
+	return &HistoryService{
+		transactionRepo: transactionRepo,
 	}
-	if err := result.Get(); err != nil {
-		return nil, err
+}
+
+func (s *HistoryService) SaveHistory(t *entity.History) error {
+	err := s.transactionRepo.Save(t)
+	if err != nil {
+		return err
 	}
-	return &result, nil
+	return nil
 }

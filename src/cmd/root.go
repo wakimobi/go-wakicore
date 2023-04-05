@@ -1,8 +1,6 @@
 package cmd
 
-import (
-	"github.com/spf13/cobra"
-)
+import "github.com/spf13/cobra"
 
 const (
 	RMQ_AUTOACK            = false
@@ -10,14 +8,19 @@ const (
 	RMQ_EXCHANGEDURABILITY = false
 	RMQ_QUEUEDURABILITY    = true
 	RMQ_DATATYPE           = "application/json"
-	RMQ_MOEXCHANGE         = "E_MO_H3I_KB"
-	RMQ_MOQUEUE            = "Q_MO_H3I_KB"
-	RMQ_DREXCHANGE         = "E_DR_H3I_KB"
-	RMQ_DRQUEUE            = "Q_DR_H3I_KB"
-	RMQ_RENEWALEXCHANGE    = "E_RENEWAL_H3I_KB"
-	RMQ_RENEWALQUEUE       = "Q_RENEWAL_H3I_KB"
-	RMQ_RETRYEXCHANGE      = "E_RETRY_H3I_KB"
-	RMQ_RETRYQUEUE         = "Q_RETRY_H3I_KB"
+	RMQ_MOEXCHANGE         = "E_MO"
+	RMQ_MOQUEUE            = "Q_MO"
+	RMQ_DREXCHANGE         = "E_DR"
+	RMQ_DRQUEUE            = "Q_DR"
+	RMQ_REMINDEREXCHANGE   = "E_REMINDER"
+	RMQ_REMINDERQUEUE      = "Q_REMINDER"
+	RMQ_RENEWALEXCHANGE    = "E_RENEWAL"
+	RMQ_RENEWALQUEUE       = "Q_RENEWAL"
+	RMQ_RETRYEXCHANGE      = "E_RETRY"
+	RMQ_RETRYQUEUE         = "Q_RETRY"
+	MT_FIRSTPUSH           = "MT_FIRSTPUSH"
+	ACT_RENEWAL            = "RENEWAL"
+	ACT_RETRY              = "RETRY"
 )
 
 var (
@@ -29,30 +32,24 @@ var (
 )
 
 func init() {
-
 	/**
-	 * Server service
+	 * WEBSERVER SERVICE
 	 */
 	rootCmd.AddCommand(serverCmd)
 
 	/**
-	 * Consumer service
+	 * RABBITMQ SERVICE
 	 */
 	rootCmd.AddCommand(consumerMOCmd)
 	rootCmd.AddCommand(consumerDRCmd)
 	rootCmd.AddCommand(consumerRenewalCmd)
 	rootCmd.AddCommand(consumerRetryCmd)
 
-	/**
-	 * Publisher service
-	 */
+	rootCmd.AddCommand(publisherReminderCmd)
 	rootCmd.AddCommand(publisherRenewalCmd)
 	rootCmd.AddCommand(publisherRetryCmd)
 
-	/**
-	 * Test service
-	 */
-	rootCmd.AddCommand(hitMtCmd)
+	rootCmd.AddCommand(testCmd)
 
 }
 
